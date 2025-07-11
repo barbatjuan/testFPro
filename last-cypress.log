@@ -1,0 +1,114 @@
+
+=======================================================
+
+  (Run Starting)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Cypress:        14.5.0                                                                         │
+  │ Browser:        Electron 130 (headless)                                                        │
+  │ Node Version:   v22.14.0 (/usr/local/bin/node)                                                 │
+  │ Specs:          1 found (contacts-api-ui.spec.js)                                              │
+  │ Searched:       cypress/e2e/contacts/contacts-api-ui.spec.js                                   │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                    
+  Running:  contacts-api-ui.spec.js                                                         (1 of 1)
+
+
+[dotenv@17.0.0] injecting env (4) from .env – 🔐 encrypt with dotenvx: https://dotenvx.com
+Autenticando...
+Token obtenido. Buscando contactos...
+Obtenidos 14 contactos (offset 0)
+
+Se eliminarán 1 contactos de prueba.
+✅ Eliminado: API UI (7ef81d08-1dbb-4194-85fe-f821df3867e8)
+
+Resumen: Eliminados: 1, Errores: 0
+  Integración API/UI de contactos
+    1) Crea contacto por API y aparece en la UI
+    2) Borra contacto por API y desaparece de la UI
+
+
+  0 passing (4s)
+  2 failing
+
+  1) Integración API/UI de contactos
+       Crea contacto por API y aparece en la UI:
+     CypressError: `cy.visit()` failed trying to load:
+
+https://factupro-frontend-dev.vercel.app/contacts
+
+The response we received from your web server was:
+
+  > 500: Internal Server Error
+
+This was considered a failure because the status code was not `2xx`.
+
+If you do not want status codes to cause failures pass the option: `failOnStatusCode: false`
+      at <unknown> (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:135035:76)
+      at visitFailedByErr (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:134441:12)
+      at <unknown> (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:135018:13)
+      at tryCatcher (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:1667:18)
+      at _drainQueueStep (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:2377:12)
+      at _drainQueue (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:2370:9)
+      at Async._drainQueues (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:2386:5)
+      at Async.drainQueues (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:2256:14)
+
+  2) Integración API/UI de contactos
+       Borra contacto por API y desaparece de la UI:
+     TypeError: Cannot read properties of null (reading 'id')
+      at Context.eval (webpack://factupro-e2e/./cypress/e2e/contacts/contacts-api-ui.spec.js:71:68)
+      at getRet (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:120941:20)
+      at tryCatcher (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:4285:29)
+      at Context.thenFn (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:120952:66)
+      at Context.then (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:121203:21)
+      at wrapped (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:141524:19)
+      at <unknown> (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:147469:15)
+      at tryCatcher (https://factupro-frontend-dev.vercel.app/__cypress/runner/cypress_runner.js:1777:23)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        2                                                                                │
+  │ Passing:      0                                                                                │
+  │ Failing:      2                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  2                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     4 seconds                                                                        │
+  │ Spec Ran:     contacts-api-ui.spec.js                                                          │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /Users/juanbarbat/factupro-e2e/cypress/screenshots/contacts-api-ui.spec.js/Integ    (2560x1440)
+     ración APIUI de contactos -- Crea contacto por API y aparece en la UI (failed).p               
+     ng                                                                                             
+  -  /Users/juanbarbat/factupro-e2e/cypress/screenshots/contacts-api-ui.spec.js/Integ    (2560x1440)
+     ración APIUI de contactos -- Borra contacto por API y desaparece de la UI (faile               
+     d).png                                                                                         
+
+
+=======================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  contacts-api-ui.spec.js                  00:04        2        -        2        -        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  1 of 1 failed (100%)                     00:04        2        -        2        -        -  
+

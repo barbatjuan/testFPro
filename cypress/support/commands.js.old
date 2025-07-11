@@ -1,0 +1,611 @@
+/**
+ * → LOGIN API
+ * Devuelve el JWT como string.
+ */
+Cypress.Commands.add("loginApi", () => {
+  return cy
+    .request("POST", `${Cypress.env("apiBase")}/auth/login`, {
+      email: Cypress.env("user"),
+      password: Cypress.env("password"),
+    })
+    .its("body.data.token");
+});
+
+/**
+ * → CREATE PRODUCT API
+ */
+Cypress.Commands.add("createProductApi", (token) => {
+  const suffix = Date.now().toString().slice(-5);
+  return cy
+    .request({
+      method: "POST",
+      url: `${Cypress.env("apiBase")}/catalog`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      body: {
+        name: `Prod Cypress ${suffix}`,
+        description: `Descripción ${suffix}`,
+        price: Number((Math.random() * 150 + 50).toFixed(2)),
+        type: "PRODUCT",
+        tags: ["auto", "cypress", suffix],
+      },
+    })
+    .its("body.data");
+});
+
+/**
+ * → GET PRODUCT by ID
+ */
+Cypress.Commands.add("getProductApi", (token, id) => {
+  return cy
+    .request({
+      method: "GET",
+      url: `${Cypress.env("apiBase")}/catalog/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+    })
+    .its("body.data");
+});
+
+/**
+ * → DELETE PRODUCT API
+ */
+Cypress.Commands.add("deleteProductApi", (token, id) => {
+  return cy
+    .request({
+      method: "DELETE",
+      url: `${Cypress.env("apiBase")}/catalog/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+    })
+    .its("status");
+});
+
+/**
+ * → LOGIN API
+ * Devuelve el JWT (string) para las llamadas posteriores.
+ */
+Cypress.Commands.add("loginApi", () => {
+  return cy
+    .request({
+      method: "POST",
+      url: `${Cypress.env("apiBase")}/auth/login`,
+      body: {
+        email: Cypress.env("user"),
+        password: Cypress.env("password"),
+      },
+    })
+    .its("body.data.token");
+});
+
+/**
+ * → CREATE CONTACT API
+ * @param {string} token – JWT retornado por cy.loginApi()
+ * @returns Chainable<{…data}>
+ */
+/**
+ * Crea un contacto a través de la API
+ * @param {string} token - Token de autenticación
+ * @param {Object} [customData={}] - Datos personalizados para el contacto
+ * @returns {Cypress.Chainable} - Promesa con la respuesta del servidor
+ */
+Cypress.Commands.add("createContactApi", (token, customData = {}) => {
+  // Generamos un CIF válido para una empresa (letra B + 8 dígitos)
+  const randomNumber = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+  const nif = `B${randomNumber}`;
+
+  // Valores por defecto
+  const defaultData = {
+    name: `Cypress Contact ${randomNumber}`,
+    nif, // ej. B12345678
+    country: "ESP",
+    state: "Madrid",
+    address: "Calle Cypress, 1",
+    city: "Madrid",
+    zipCode: "28001",
+    email: `contact+${randomNumber}@factupro.com`,
+    phone: `600${randomNumber.slice(0,6)}`,
+    website: "https://factupro.com",
+    isCustomer: true,
+    isSupplier: false, // <--- obligatorio
+    type: "company",
+    vatId: `ES${nif}`,
+    tags: ["auto", "cypress", randomNumber],
+    preferences: [{ key: "currency", value: "EUR", ambit: "general" }],
+  };
+
+  // Combinar valores por defecto con los datos personalizados
+  const body = { ...defaultData, ...customData };
+
+  return cy
+    .request({
+      method: "POST",
+      url: `${Cypress.env("apiBase")}/contacts`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      body,
+    })
+    .its("body.data");
+});
+
+/**
+ * → CREATE PRODUCT API (ahora con nombre 100% único)
+ */
+// cypress/support/commands.js
+
+Cypress.Commands.add("createProductApi", (token) => {
+  const suffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  const name = `Prod Cypress ${suffix}`;
+
+  return cy
+    .request({
+      method: "POST",
+      url: `${Cypress.env("apiBase")}/catalog`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      body: {
+        name,
+        description: `Descripción ${suffix}`,
+        price: Number((Math.random() * 150 + 50).toFixed(2)),
+        type: "PRODUCT",
+        tags: ["auto", "cypress", suffix],
+      },
+    })
+    .its("body.data");
+});
+
+Cypress.Commands.add("getContactsApi", (token) => {
+  return cy
+    .request({
+      method: "GET",
+      url: `${Cypress.env("apiBase")}/contacts`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      failOnStatusCode: false,
+    })
+    .then((resp) => {
+      const body = resp.body;
+      const data = body.data;
+
+      if (Array.isArray(data)) {
+        return data;
+      }
+      if (data && Array.isArray(data.contacts)) {
+        return data.contacts;
+      }
+      if (Array.isArray(body)) {
+        return body;
+      }
+      if (body && Array.isArray(body.contacts)) {
+        return body.contacts;
+      }
+
+      // si llegamos aquí sabemos que no encontramos lista
+      throw new Error(
+        "getContactsApi: esperaba un array en resp.body o resp.body.data, pero llegó:\n" +
+          JSON.stringify(body, null, 2)
+      );
+    });
+
+/**
+ * → LOGIN UI
+ * Realiza el login a través de la interfaz de usuario y cachea la sesión para tests E2E.
+ */
+Cypress.Commands.add('login', () => {
+  // cy.session() es la forma moderna y eficiente de manejar el login.
+  // Guarda y restaura cookies, localStorage, etc., evitando el login repetido.
+  cy.session('userSession', () => {
+    const username = Cypress.env('USER_EMAIL');
+    const password = Cypress.env('USER_PASSWORD');
+
+    if (!username || !password) {
+      throw new Error('Las credenciales USER_EMAIL y USER_PASSWORD no están configuradas en cypress.env');
+    }
+
+    cy.visit('/login', { failOnStatusCode: false });
+    cy.get('#email').type(username);
+    cy.get('#password').type(password);
+    cy.get('button[type="submit"]').click();
+    
+    // Verificamos que la URL ha cambiado, confirmando que el login fue exitoso.
+    cy.url().should('not.include', '/login');
+  });
+});
+
+/**
+ * → GET CONTACT by ID
+ */
+Cypress.Commands.add("getContactByIdApi", (token, id) => {
+  return cy
+    .request({
+      method: "GET",
+      url: `${Cypress.env("apiBase")}/contacts/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      failOnStatusCode: false,
+    })
+    .its("body.data");
+});
+
+Cypress.Commands.add("updateContactApi", (token, id, changes) => {
+  return cy
+    .request({
+      method: "PATCH",
+      url: `${Cypress.env("apiBase")}/contacts/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      body: changes,
+    })
+    .its("body.data");
+});
+
+Cypress.Commands.add("deleteContactApi", (token, id) => {
+  return cy
+    .request({
+      method: "DELETE",
+      url: `${Cypress.env("apiBase")}/contacts/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+    })
+    .its("status");
+});
+
+// --- PRODUCTOS CRUD ---
+Cypress.Commands.add("getProductsApi", (token) => {
+  return cy
+    .request({
+      method: "GET",
+      url: `${Cypress.env("apiBase")}/catalog`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+    })
+    .its("body.data");
+});
+
+Cypress.Commands.add("deleteProductApi", (token, id) => {
+  return cy
+    .request({
+      method: "DELETE",
+      url: `${Cypress.env("apiBase")}/catalog/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+    })
+    .its("status");
+});
+
+/**
+ * CREATE INVOICE payload mínimo (el que ya probó con éxito en debug)
+ */
+Cypress.Commands.add("createInvoiceMinimalApi", (token, contactId, product) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const due = new Date(Date.now() + 7 * 86400e3).toISOString().slice(0, 10);
+  const price = product.price;
+
+  const body = {
+    invoiceCategory: "SALE",
+    type: "NORMAL",
+    contactId,
+    issueDate: today,
+    dueDate: due,
+    status: "DRAFT",
+    currency: "EUR",
+    paymentMethod: "cash",
+    items: [
+      {
+        productId: product.id,
+        name: product.name,
+        quantity: 1,
+        unitPrice: price,
+        grossSubtotalAmount: price,
+        itemDiscountAmount: 0,
+        grossSubtotalAfterItemDiscount: price,
+        globalDiscount: 0,
+        globalDiscountAmount: 0,
+        grossSubtotalAfterGlobalDiscount: price,
+        taxesAmount: 0,
+        taxes: [],
+        netTotalAmount: price,
+      },
+    ],
+    grossSubtotalAmount: price,
+    itemDiscountAmount: 0,
+    globalDiscountAmount: 0,
+    netSubtotalAmount: price,
+    taxesAmount: 0,
+    netTotalAmount: price,
+  };
+
+  return cy
+    .request({
+      method: "POST",
+      url: `${Cypress.env("apiBase")}/invoices`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      body,
+    })
+    .its("body.data");
+});
+
+/**
+ * GET INVOICE by ID
+ */
+Cypress.Commands.add("getInvoiceApi", (token, invoiceId) => {
+  return cy
+    .request({
+      method: "GET",
+      url: `${Cypress.env("apiBase")}/invoices/${invoiceId}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      failOnStatusCode: false,
+    })
+    .its("body.data");
+});
+
+/**
+ * DELETE INVOICE by ID
+ */
+Cypress.Commands.add("deleteInvoiceApi", (token, invoiceId) => {
+  return cy
+    .request({
+      method: "DELETE",
+      url: `${Cypress.env("apiBase")}/invoices/${invoiceId}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      failOnStatusCode: false,
+    })
+    .its("status");
+});
+
+/* EXPENSES */
+
+/**
+ * → CREATE EXPENSE (factura de compra mínima)
+ */
+Cypress.Commands.add("createExpenseApi", (token, contactId, product) => {
+  // reutiliza tu helper de invoice mínimo, sólo cambiando category
+  return cy.createInvoiceMinimalApi(token, contactId, product, "PURCHASE");
+});
+
+/**
+ * → LIST EXPENSES
+ * Llama al endpoint de invoices filtrado por categoría PURCHASE
+ */
+Cypress.Commands.add("getExpensesApi", (token) => {
+  return cy
+    .request({
+      method: "GET",
+      url: `${Cypress.env(
+        "apiBase"
+      )}/invoices?invoiceCategory=PURCHASE&limit=100&orderBy=issueDate:desc`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      failOnStatusCode: false,
+    })
+    .its("body.data");
+});
+
+/**
+ * → GET EXPENSE BY ID
+ */
+Cypress.Commands.add("getExpenseApi", (token, id) => {
+  return cy
+    .request({
+      method: "GET",
+      url: `${Cypress.env("apiBase")}/invoices/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      failOnStatusCode: false,
+    })
+    .its("body.data");
+});
+
+/**
+ * → UPDATE EXPENSE
+ */
+Cypress.Commands.add("updateExpenseApi", (token, id, changes) => {
+  return cy
+    .request({
+      method: "PATCH",
+      url: `${Cypress.env("apiBase")}/invoices/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      body: changes,
+      failOnStatusCode: false,
+    })
+    .its("body.data");
+});
+
+/**
+ * → DELETE EXPENSE
+ */
+Cypress.Commands.add("deleteExpenseApi", (token, id) => {
+  return cy
+    .request({
+      method: "DELETE",
+      url: `${Cypress.env("apiBase")}/invoices/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      failOnStatusCode: false,
+    })
+    .its("status");
+});
+
+/**
+ * CREATE SUPPLIER API
+ * Igual que createContactApi, pero isSupplier: true
+ */
+Cypress.Commands.add("createSupplierApi", (token) => {
+  const nums = Math.floor(Math.random() * 1e7)
+    .toString()
+    .padStart(7, "0");
+  const control = "X";
+  const body = {
+    name: `Supplier Cypress ${nums}`,
+    nif: `B${nums}${control}`,
+    country: "ESP",
+    state: "Madrid",
+    city: "Madrid",
+    address: "Calle Supplier, 1",
+    zipCode: "28001",
+    email: `supplier+${nums}@factupro.com`,
+    phone: `6001234${nums}`,
+    website: "https://factupro.com",
+    isCustomer: false,
+    isSupplier: true,
+    type: "company",
+    vatId: `ESB${nums}${control}`,
+    tags: ["auto", "cypress", "supplier", nums],
+    preferences: [{ key: "currency", value: "EUR", ambit: "general" }],
+  };
+  return cy
+    .request({
+      method: "POST",
+      url: `${Cypress.env("apiBase")}/contacts`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-merchant-id": Cypress.env("merchantId"),
+      },
+      body,
+    })
+    .its("body.data");
+});
+
+/**
+ * CREATE EXPENSE (purchase-invoice mínimo)
+ * contactId debe ser el id de un supplier
+ */
+/**
+ * Crea una factura mínima.
+ * @param category “SALE” o “PURCHASE”
+ */
+Cypress.Commands.add(
+  "createInvoiceMinimalApi",
+  (token, contactId, product, category = "SALE") => {
+    const today = new Date().toISOString().slice(0,10);
+    const due   = new Date(Date.now()+7*86400e3).toISOString().slice(0,10);
+    const price = product.price;
+    const quantity = 1;
+    
+    // Cálculos según el ejemplo de Swagger
+    const grossSubtotal = price * quantity; // 100 * 2 = 200
+    const itemDiscount = 0; // Sin descuento por ítem para el caso mínimo
+    const itemDiscountAmount = 0; // 40 en el ejemplo (20% de 200)
+    const globalDiscount = 0; // 10% en el ejemplo
+    const globalDiscountAmount = 0; // 20 en el ejemplo (10% de 200)
+    const taxesAmount = 0; // 29.7 en el ejemplo
+    
+    const grossSubtotalAfterItemDiscount = grossSubtotal - itemDiscountAmount;
+    const grossSubtotalAfterGlobalDiscount = grossSubtotalAfterItemDiscount - globalDiscountAmount;
+    const netTotal = grossSubtotalAfterGlobalDiscount + taxesAmount;
+    
+    // Para el nivel de factura
+    const invoiceItemDiscountAmount = 0; // 20 en el ejemplo
+    const invoiceGlobalDiscountAmount = 0; // 20 en el ejemplo
+    const netSubtotal = grossSubtotal - invoiceItemDiscountAmount - invoiceGlobalDiscountAmount;
+
+    return cy
+      .request({
+        method: "POST",
+        url:    `${Cypress.env("apiBase")}/invoices`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-merchant-id": Cypress.env("merchantId")
+        },
+        body: {
+          invoiceCategory: category,
+          type: "NORMAL",
+          contactId,
+          issueDate: today,
+          dueDate: due,
+          status: "DRAFT",
+          globalDiscount: globalDiscount,
+          paymentMethod: "cash",
+          currency: "EUR",
+          items: [{
+            productId: product.id,
+            name: product.name,
+            quantity: quantity,
+            unitPrice: price,
+            itemDiscount: itemDiscount,
+            grossSubtotalAmount: grossSubtotal,
+            itemDiscountAmount: itemDiscountAmount,
+            globalDiscount: globalDiscount,
+            grossSubtotalAfterItemDiscount: grossSubtotalAfterItemDiscount,
+            globalDiscountAmount: globalDiscountAmount,
+            grossSubtotalAfterGlobalDiscount: grossSubtotalAfterGlobalDiscount,
+            taxesAmount: taxesAmount,
+            taxes: [],
+            netTotalAmount: netTotal
+          }],
+          grossSubtotalAmount: grossSubtotal,
+          itemDiscountAmount: invoiceItemDiscountAmount,
+          globalDiscountAmount: invoiceGlobalDiscountAmount,
+          netSubtotalAmount: netSubtotal,
+          taxesAmount: taxesAmount,
+          netTotalAmount: netTotal
+        }
+      })
+      .its("body.data");
+  }
+);
+
+/**
+ * → LOGIN UI
+ * Realiza el login a través de la interfaz de usuario y cachea la sesión para tests E2E.
+ */
+Cypress.Commands.add("login", () => {
+  // cy.session() es la forma moderna y eficiente de manejar el login.
+  // Guarda y restaura cookies, localStorage, etc., evitando el login repetido.
+  cy.session("userSession", () => {
+    const username = Cypress.env("USER_EMAIL");
+    const password = Cypress.env("USER_PASSWORD");
+
+    if (!username || !password) {
+      throw new Error("Las credenciales USER_EMAIL y USER_PASSWORD no están configuradas en cypress.env");
+    }
+
+    cy.visit("/login", { failOnStatusCode: false });
+    cy.get("#email").type(username);
+    cy.get("#password").type(password);
+    cy.get("button[type=\"submit\"]").click();
+    
+    // Verificamos que la URL ha cambiado, confirmando que el login fue exitoso.
+    cy.url().should("not.include", "/login");
+  });
+});
