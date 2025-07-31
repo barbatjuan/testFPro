@@ -89,16 +89,20 @@ export const options = {
 };
 
 // Variables de entorno - Se obtienen del sistema o de los parámetros pasados a k6
-const baseUrl = __ENV.API_BASE || 'https://factupro-backend-development.up.railway.app'; // Usa la variable de entorno o un valor por defecto
-// La ruta del endpoint de autenticación debe ser correcta según la API
+const baseUrl = __ENV.API_BASE;
 const authEndpoint = '/api/v1/auth/login';
 const merchantId = __ENV.MERCHANT_ID || ''; // ID del comerciante si es necesario
 
 // Credenciales de prueba para k6 Cloud (usuario real de testing)
 const testUser = {
-  email: __ENV.USER_EMAIL || 'testfpro1@adrirodrigoagencia.es',
-  password: __ENV.USER_PASSWORD || 'Testfpro_123!!'
+  email: __ENV.USER_EMAIL,
+  password: __ENV.USER_PASSWORD
 };
+
+// Comprobación de seguridad: asegurar que las variables críticas están definidas
+if (!baseUrl || !testUser.email || !testUser.password) {
+  throw new Error('Faltan variables de entorno críticas. Asegúrate de definir API_BASE, USER_EMAIL y USER_PASSWORD.');
+}
 
 console.log(`Usando API base: ${baseUrl}`);
 console.log(`Usuario de prueba: ${testUser.email}`);
