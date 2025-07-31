@@ -66,14 +66,17 @@ export const options = {
     name: 'Factupro Production Test'
   },
   
-  // Configuración de escenarios para prueba de carga intensiva
+  // Configuración de escenarios para prueba de estrés gradual
   scenarios: {
-    default: {
-      executor: 'constant-vus',
-      vus: 15,             // 15 usuarios virtuales simultáneos
-      duration: '20s',     // Duración corta para prueba de estrés
-      gracefulStop: '10s', // Tiempo de cierre reducido
-    },
+    stress_test: {
+      executor: 'ramping-vus',
+      stages: [
+        { duration: '30s', target: 15 },  // Rampa inicial
+        { duration: '1m', target: 30 },   // Carga objetivo
+        { duration: '30s', target: 0 }    // Descenso
+      ],
+      gracefulStop: '15s'
+    }
   },
   
   // Umbrales conservadores
@@ -175,7 +178,6 @@ export default function() {
   group('📊 Pruebas GET en PRODUCCIÓN', function() {
     
     // Test 1: Obtener catálogo de productos
-    console.log(`VU ${__VU}: Obteniendo catálogo en PRODUCCIÓN...`);
     const catalogStart = Date.now();
     
     const catalogRes = http.get(`${baseUrl}/api/v1/catalog`, {
@@ -198,9 +200,7 @@ export default function() {
       },
     });
     
-    if (catalogSuccess) {
-      console.log(`✅ Catálogo obtenido en PRODUCCIÓN en ${catalogDuration}ms`);
-    } else {
+    if (!catalogSuccess) {
       apiErrors.add(1);
       console.log(`❌ Error obteniendo catálogo en PRODUCCIÓN - Status: ${catalogRes.status}`);
     }
@@ -208,7 +208,6 @@ export default function() {
     sleep(2);
     
     // Test 2: Obtener contactos
-    console.log(`VU ${__VU}: Obteniendo contactos en PRODUCCIÓN...`);
     const contactsStart = Date.now();
     
     const contactsRes = http.get(`${baseUrl}/api/v1/contacts?limit=5`, {
@@ -231,9 +230,7 @@ export default function() {
       },
     });
     
-    if (contactsSuccess) {
-      console.log(`✅ Contactos obtenidos en PRODUCCIÓN en ${contactsDuration}ms`);
-    } else {
+    if (!contactsSuccess) {
       apiErrors.add(1);
       console.log(`❌ Error obteniendo contactos en PRODUCCIÓN - Status: ${contactsRes.status}`);
     }
@@ -241,7 +238,6 @@ export default function() {
     sleep(2);
     
     // Test 3: Obtener facturas
-    console.log(`VU ${__VU}: Obteniendo facturas en PRODUCCIÓN...`);
     const invoicesStart = Date.now();
     
     const invoicesRes = http.get(`${baseUrl}/api/v1/invoices?limit=5`, {
@@ -264,9 +260,7 @@ export default function() {
       },
     });
     
-    if (invoicesSuccess) {
-      console.log(`✅ Facturas obtenidas en PRODUCCIÓN en ${invoicesDuration}ms`);
-    } else {
+    if (!invoicesSuccess) {
       apiErrors.add(1);
       console.log(`❌ Error obteniendo facturas en PRODUCCIÓN - Status: ${invoicesRes.status}`);
     }
@@ -275,7 +269,7 @@ export default function() {
   // Pausa final
   sleep(3);
   
-  console.log(`VU ${__VU}: Prueba de PRODUCCIÓN completada`);
+  // Prueba completada silenciosamente
 }
 
 // Función de resumen personalizada
