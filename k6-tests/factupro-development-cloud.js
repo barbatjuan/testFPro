@@ -38,23 +38,28 @@ export const responseTime = new Trend('response_time');
 
 // Opciones de la prueba optimizadas para k6 Cloud
 export const options = {
-  vus: 1,                    // SOLO 1 usuario virtual
-  duration: '30s',           // Duración corta: 30 segundos
-  
   // Configuración para Grafana Cloud
   cloud: {
-    // Project: Default project
-    projectID: 3664457,
-    // Test runs with the same name groups test runs together.
-    name: 'Factupro Development Test'
+    projectID: 3784419,
+    name: 'Factupro Development - Concurrent Read Operations Test'
   },
   
-  // Umbrales conservadores
+  // Configuración de concurrencia real para consultas GET
+  scenarios: {
+    simultaneous_read_operations: {
+      executor: 'constant-vus',
+      vus: 5,              // 5 usuarios leyendo datos simultáneamente
+      duration: '1m',      // Durante 1 minuto
+      gracefulStop: '10s'
+    }
+  },
+  
+  // Umbrales ajustados para 5 VUs concurrentes
   thresholds: {
-    'http_req_duration': ['p(95)<3000'],     // 3 segundos máximo
+    'http_req_duration': ['p(95)<5000'],     // 5 segundos máximo (ajustado para concurrencia)
     'http_req_failed': ['rate<0.05'],        // Máximo 5% de fallos
-    'login_errors': ['count<3'],             // Máximo 3 errores de login
-    'api_errors': ['count<5'],               // Máximo 5 errores de API
+    'login_errors': ['count<8'],             // Máximo 8 errores de login (5 VUs)
+    'api_errors': ['count<10'],              // Máximo 10 errores de API
   },
 };
 
